@@ -14,7 +14,7 @@ impl<T> HuffmanNode<T>
 where
     T: PartialEq + Eq,
 {
-    fn get_weight(&self) -> usize {
+    pub fn get_weight(&self) -> usize {
         match self {
             Leaf(leaf) => leaf.weight,
             Branch(branch) => branch.weight,

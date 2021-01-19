@@ -95,4 +95,15 @@ mod tests {
 
         assert_eq!(tree, HuffmanNode::into_leaf("A", 2));
     }
+
+    #[test]
+    fn two_symbols_generate_branch_tree() {
+        let mut generator = HuffmanGenerator::new();
+        generator.add_occurences(&"A", 2);
+        generator.add_occurences(&"B", 4);
+        generator.add_occurences(&"C", 1);
+
+        let tree_weight = generator.into_huffman_tree().unwrap().get_weight();
+        assert_eq!(7, tree_weight)
+    }
 }
