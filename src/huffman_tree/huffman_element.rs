@@ -64,16 +64,16 @@ pub struct HuffmanLeaf<T>
 where
     T: PartialEq + Eq,
 {
-    weight: usize,
-    symbol: T,
+    pub weight: usize,
+    pub symbol: T,
 }
 #[derive(Debug, PartialEq, Eq)]
 pub struct HuffmanBranch<T>
 where
     T: PartialEq + Eq,
 {
-    weight: usize,
-    links: (Box<HuffmanNode<T>>, Box<HuffmanNode<T>>),
+    pub weight: usize,
+    pub links: (Box<HuffmanNode<T>>, Box<HuffmanNode<T>>),
 }
 
 impl<T> HuffmanBranch<T>

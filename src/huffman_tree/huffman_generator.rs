@@ -40,9 +40,7 @@ where
 
         let mut symbols = BTreeSet::new();
         for (symbol, count) in self.symbols.into_iter() {
-            println!("inserted {:?}", symbol);
             symbols.insert(HuffmanNode::into_leaf(symbol, count));
-            println!("length after insertion {:?}", symbols.len());
         }
 
         while symbols.len() > 1 {
