@@ -200,5 +200,26 @@ mod tests {
             let result = encoder.encode(&mut stream);
             assert_eq!(result.unwrap().to_bytes(), vec![0b110010, 0b10000011, 0b0]);
         }
+
+        #[test]
+        fn four_symbols_encoding_is_correct() {
+            let mut gen = HuffmanGenerator::new();
+            gen.add_occurences(&"A", 9);
+            gen.add_occurences(&"B", 5);
+            gen.add_occurences(&"C", 2);
+            gen.add_occurences(&"D", 2);
+
+            let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
+            let literal = [
+                "A", "B", "B", "A", "C", "D", "A", "A", "B", "A", "A", "B", "A", "A", "B", "C",
+                "D", "A",
+            ];
+            let mut stream = literal.iter();
+            let result = encoder.encode(&mut stream);
+            assert_eq!(
+                result.unwrap().to_bytes(),
+                vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]
+            );
+        }
     }
 }
