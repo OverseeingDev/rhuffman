@@ -72,7 +72,7 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
         let mut bitvec = BitVec::new();
         for symbol in iter {
             if let Some(code) = self.symbols.get(&symbol) {
-                code.append_code_to_bitvec(&mut bitvec);
+                bitvec.append(&mut code.code.clone());
             } else {
                 return Err(symbol.clone());
             }
@@ -95,10 +95,6 @@ impl HuffmanCode {
 
     fn append_bit(&mut self, bit: bool) {
         self.code.push(bit);
-    }
-
-    pub fn append_code_to_bitvec(&self, bitvec: &mut BitVec) {
-        bitvec.append(&mut self.code.clone());
     }
 }
 
@@ -162,7 +158,7 @@ mod tests {
             assert!(code.code.eq_vec(&[true, true]));
 
             let mut bitvec = BitVec::new();
-            code.append_code_to_bitvec(&mut bitvec);
+            bitvec.append(&mut code.code.clone());
             assert!(bitvec.eq_vec(&[true, true]));
         }
 
@@ -181,8 +177,8 @@ mod tests {
             code2.append_bit(true);
 
             let mut bitvec = BitVec::new();
-            code1.append_code_to_bitvec(&mut bitvec);
-            code2.append_code_to_bitvec(&mut bitvec);
+            bitvec.append(&mut code1.code.clone());
+            bitvec.append(&mut code2.code.clone());
             assert!(bitvec.eq_vec(&[true, false, false, true]));
         }
     }
