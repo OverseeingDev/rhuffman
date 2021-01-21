@@ -1,18 +1,48 @@
-use std::{collections::HashMap, fmt::Debug, hash::Hash};
+use std::{collections::HashMap, hash::Hash};
 
 use bit_vec::BitVec;
 
 use super::huffman_element::HuffmanNode;
-pub struct HuffmanEncoder<T: Eq> {
+use crate::huffman_tree::huffman_generator::HuffmanGenerator;
+
+/// The huffman encoder struct contains a Huffman encoding scheme that can then be used to encode various sequences
+/// of the symbols. Usually, that huffman encoding scheme is generated on a per-sample basis so as to optimize the
+/// compression for the particular sequence being compressed.
+/// ## Examples
+/// ```
+/// # use crate::huffman::huffman_tree::huffman_encoder::HuffmanEncoder;
+/// let literal = [
+/// "B", "A", "A", "A", "A", "C"
+/// ];
+/// let encoder = HuffmanEncoder::from_symbols_iterator(&mut literal.iter()).unwrap();
+/// let result = encoder.encode(&mut literal.iter());
+/// assert_eq!( result.unwrap().to_bytes(), vec![0b11000010]);
+/// ```
+pub struct HuffmanEncoder<T: Eq + Hash + Clone + Ord> {
     symbols: HashMap<T, HuffmanCode>,
 }
 
-impl<T: Eq + Hash + Clone + Debug> HuffmanEncoder<T> {
+impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
+    /// Generates a HuffmanEncoder tailor-made to encode the contents streamed by this iterator.
+    /// It is expected that you then encode the exact same content for encoding afterwards by using 'HuffmanEncoder::encode'.
+    /// This usually means being able to restart the iterator or to create an identical one thereafter.
+    pub fn from_symbols_iterator(
+        iterator: &mut dyn Iterator<Item = &T>,
+    ) -> Result<HuffmanEncoder<T>, &'static str> {
+        let mut huffman_generator = HuffmanGenerator::new();
+        for symbol in iterator {
+            huffman_generator.add_occurences(symbol, 1);
+        }
+        match huffman_generator.into_huffman_tree() {
+            Some(tree) => Ok(HuffmanEncoder::from_tree(&tree)),
+            None => Err("One or fewer symbols were provided"),
+        }
+    }
+
     pub fn from_tree(tree: &HuffmanNode<T>) -> HuffmanEncoder<T> {
         let mut map = HashMap::new();
 
         HuffmanEncoder::visit_tree(&tree, HuffmanCode::new(), &mut map);
-        println!("Map: {:?}", map);
         HuffmanEncoder { symbols: map }
     }
 
@@ -48,7 +78,7 @@ impl<T: Eq + Hash + Clone + Debug> HuffmanEncoder<T> {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct HuffmanCode {
     code: BitVec,
 }
@@ -216,6 +246,20 @@ mod tests {
             ];
             let mut stream = literal.iter();
             let result = encoder.encode(&mut stream);
+            assert_eq!(
+                result.unwrap().to_bytes(),
+                vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]
+            );
+        }
+
+        #[test]
+        fn encoder_from_iterator() {
+            let literal = [
+                "A", "B", "B", "A", "C", "D", "A", "A", "B", "A", "A", "B", "A", "A", "B", "C",
+                "D", "A",
+            ];
+            let encoder = HuffmanEncoder::from_symbols_iterator(&mut literal.iter()).unwrap();
+            let result = encoder.encode(&mut literal.iter());
             assert_eq!(
                 result.unwrap().to_bytes(),
                 vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]

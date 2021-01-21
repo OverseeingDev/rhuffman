@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, usize};
 use HuffmanNode::*;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum HuffmanNode<T>
 where
     T: PartialEq + Eq,
@@ -59,7 +59,7 @@ where
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct HuffmanLeaf<T>
 where
     T: PartialEq + Eq,
@@ -67,7 +67,7 @@ where
     pub weight: usize,
     pub symbol: T,
 }
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug)]
 pub struct HuffmanBranch<T>
 where
     T: PartialEq + Eq,

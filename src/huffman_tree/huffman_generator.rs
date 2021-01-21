@@ -1,6 +1,5 @@
 use std::{
     collections::{BTreeSet, HashMap},
-    fmt::Debug,
     hash::Hash,
 };
 
@@ -8,14 +7,14 @@ use super::huffman_element::HuffmanNode;
 
 pub struct HuffmanGenerator<T>
 where
-    T: Eq + Hash,
+    T: Eq + Hash + Clone + Ord,
 {
     symbols: HashMap<T, usize>,
 }
 
 impl<T> HuffmanGenerator<T>
 where
-    T: Eq + Hash + Clone + Debug + Ord,
+    T: Eq + Hash + Clone + Ord,
 {
     pub fn new() -> HuffmanGenerator<T> {
         HuffmanGenerator {
