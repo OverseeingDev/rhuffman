@@ -19,7 +19,7 @@ use super::huffman_generator::HuffmanGenerator;
 /// assert_eq!( result.unwrap().to_bytes(), vec![0b11000010]);
 /// ```
 pub struct HuffmanEncoder<T: Eq + Hash + Clone + Ord> {
-    symbols: HashMap<T, HuffmanCode>,
+    symbols: HashMap<T, BitVec>,
 }
 
 impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
@@ -42,14 +42,14 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
     pub fn from_tree(tree: &HuffmanNode<T>) -> HuffmanEncoder<T> {
         let mut map = HashMap::new();
 
-        HuffmanEncoder::visit_tree(&tree, HuffmanCode::new(), &mut map);
+        HuffmanEncoder::visit_tree(&tree, BitVec::new(), &mut map);
         HuffmanEncoder { symbols: map }
     }
 
     fn visit_tree(
         tree: &HuffmanNode<T>,
-        mut current_prefix: HuffmanCode,
-        symbols: &mut HashMap<T, HuffmanCode>,
+        mut current_prefix: BitVec,
+        symbols: &mut HashMap<T, BitVec>,
     ) {
         match tree {
             HuffmanNode::Leaf(leaf) => {
@@ -57,8 +57,8 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
             }
             HuffmanNode::Branch(branch) => {
                 let mut left_prefix = current_prefix.clone();
-                left_prefix.append_bit(false);
-                current_prefix.append_bit(true);
+                left_prefix.push(false);
+                current_prefix.push(true);
                 HuffmanEncoder::visit_tree(&branch.links.0, left_prefix, symbols);
                 HuffmanEncoder::visit_tree(&branch.links.1, current_prefix, symbols);
             }
@@ -72,7 +72,7 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
         let mut bitvec = BitVec::new();
         for symbol in iter {
             if let Some(code) = self.symbols.get(&symbol) {
-                bitvec.append(&mut code.code.clone());
+                bitvec.append(&mut code.clone());
             } else {
                 return Err(symbol.clone());
             }
@@ -81,108 +81,8 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
     }
 }
 
-#[derive(Clone)]
-struct HuffmanCode {
-    code: BitVec,
-}
-
-impl HuffmanCode {
-    pub fn new() -> HuffmanCode {
-        HuffmanCode {
-            code: BitVec::new(),
-        }
-    }
-
-    fn append_bit(&mut self, bit: bool) {
-        self.code.push(bit);
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    mod huffman_code {
-        use super::super::*;
-
-        #[test]
-        fn appendbit_modifies_code_correctly() {
-            let mut code = HuffmanCode {
-                code: BitVec::new(),
-            };
-
-            code.append_bit(true);
-
-            assert!(code.code.eq_vec(&[true]));
-        }
-
-        #[test]
-        fn multiple_invocations_of_appendbit_result_in_correct_code() {
-            let mut code = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code.append_bit(false);
-            code.append_bit(true);
-
-            assert!(code.code.eq_vec(&[false, true]));
-
-            let mut code = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code.append_bit(false);
-            code.append_bit(false);
-            assert!(code.code.eq_vec(&[false, false]));
-
-            let mut code = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code.append_bit(true);
-            code.append_bit(true);
-            assert!(code.code.eq_vec(&[true, true]));
-
-            let mut code = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code.append_bit(true);
-            code.append_bit(false);
-            code.append_bit(true);
-            code.append_bit(true);
-            assert!(code.code.eq_vec(&[true, false, true, true]));
-        }
-
-        #[test]
-        fn first_encoded_is_identical() {
-            let mut code = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code.append_bit(true);
-            code.append_bit(true);
-            assert!(code.code.eq_vec(&[true, true]));
-
-            let mut bitvec = BitVec::new();
-            bitvec.append(&mut code.code.clone());
-            assert!(bitvec.eq_vec(&[true, true]));
-        }
-
-        #[test]
-        fn encoding_behaves_predictably() {
-            let mut code1 = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code1.append_bit(true);
-            code1.append_bit(false);
-
-            let mut code2 = HuffmanCode {
-                code: BitVec::new(),
-            };
-            code2.append_bit(false);
-            code2.append_bit(true);
-
-            let mut bitvec = BitVec::new();
-            bitvec.append(&mut code1.code.clone());
-            bitvec.append(&mut code2.code.clone());
-            assert!(bitvec.eq_vec(&[true, false, false, true]));
-        }
-    }
-
     mod huffman_encoder {
         use crate::huffman_tree::huffman_generator::HuffmanGenerator;
 
