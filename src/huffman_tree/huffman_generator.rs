@@ -1,9 +1,10 @@
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::{BinaryHeap, HashMap},
     hash::Hash,
 };
 
 use super::huffman_element::HuffmanNode;
+use std::cmp::Reverse;
 
 pub struct HuffmanGenerator<T>
 where
@@ -37,19 +38,19 @@ where
             return None;
         }
 
-        let mut symbols = BTreeSet::new();
+        let mut symbols = BinaryHeap::new();
         for (symbol, count) in self.symbols.into_iter() {
-            symbols.insert(HuffmanNode::into_leaf(symbol, count));
+            symbols.push(Reverse(HuffmanNode::into_leaf(symbol, count)));
         }
 
         while symbols.len() > 1 {
-            let lower = symbols.pop_first().unwrap();
-            let greater = symbols.pop_first().unwrap();
+            let lower = symbols.pop().unwrap().0;
+            let greater = symbols.pop().unwrap().0;
 
-            symbols.insert(HuffmanNode::into_branch(greater, lower));
+            symbols.push(Reverse(HuffmanNode::into_branch(greater, lower)));
         }
 
-        Some(symbols.pop_first().unwrap())
+        Some(symbols.pop().unwrap().0)
     }
 }
 
