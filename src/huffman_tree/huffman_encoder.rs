@@ -3,7 +3,7 @@ use std::{collections::HashMap, hash::Hash};
 use bit_vec::BitVec;
 
 use super::huffman_element::HuffmanNode;
-use crate::huffman_tree::huffman_generator::HuffmanGenerator;
+use super::huffman_generator::HuffmanGenerator;
 
 /// The huffman encoder struct contains a Huffman encoding scheme that can then be used to encode various sequences
 /// of the symbols. Usually, that huffman encoding scheme is generated on a per-sample basis so as to optimize the
@@ -65,6 +65,9 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
         }
     }
 
+    /// Attempts to encode the given stream of symbols with the internal encoding.
+    /// ## Errors
+    /// If the stream produces a symbol that is not part of the encoding, encode returns Err with a copy of the offending symbol.
     pub fn encode(&self, iter: &mut dyn Iterator<Item = &T>) -> Result<BitVec, T> {
         let mut bitvec = BitVec::new();
         for symbol in iter {
