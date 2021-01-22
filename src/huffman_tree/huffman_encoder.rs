@@ -24,14 +24,16 @@ pub struct HuffmanEncoder<T: Eq + Hash + Clone + Ord> {
 
 impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
     /// Generates a HuffmanEncoder tailor-made to encode the contents streamed by this iterator.
-    /// It is expected that you then encode the exact same content for encoding afterwards by using 'HuffmanEncoder::encode'.
+    /// It is expected that you then encode the exact same content for encoding afterwards by using [encode()](HuffmanEncoder::encode)
+    /// on the resulting Encoder.
+    ///
     /// This usually means being able to restart the iterator or to create an identical one thereafter.
     pub fn from_symbols_iterator(
         iterator: &mut dyn Iterator<Item = &T>,
     ) -> Result<HuffmanEncoder<T>, &'static str> {
         let mut huffman_generator = HuffmanGenerator::new();
         for symbol in iterator {
-            huffman_generator.add_occurences(symbol, 1);
+            huffman_generator.add_occurences_to_symbol(symbol, 1);
         }
         match huffman_generator.into_huffman_tree() {
             Some(tree) => Ok(HuffmanEncoder::from_tree(&tree)),
@@ -39,6 +41,8 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
         }
     }
 
+    /// Generates a [HuffmanEncoder](HuffmanEncoder) from the tree. You may obtain
+    /// such a tree from a [HuffmanGenerator](super::huffman_generator::HuffmanGenerator)
     pub fn from_tree(tree: &HuffmanNode<T>) -> HuffmanEncoder<T> {
         let mut map = HashMap::new();
 
@@ -67,7 +71,7 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
 
     /// Attempts to encode the given stream of symbols with the internal encoding.
     /// ## Errors
-    /// If the stream produces a symbol that is not part of the encoding, encode returns Err with a copy of the offending symbol.
+    /// If the stream produces a symbol that is not part of the encoding, encode returns Err containing a copy of the offending symbol.
     pub fn encode(&self, iter: &mut dyn Iterator<Item = &T>) -> Result<BitVec, T> {
         let mut bitvec = BitVec::new();
         for symbol in iter {
@@ -91,8 +95,8 @@ mod tests {
         #[test]
         fn using_unknown_symbol_returns_offending_symbol() {
             let mut gen = HuffmanGenerator::new();
-            gen.add_occurences(&String::from("A"), 2);
-            gen.add_occurences(&String::from("B"), 2);
+            gen.add_occurences_to_symbol(&String::from("A"), 2);
+            gen.add_occurences_to_symbol(&String::from("B"), 2);
 
             let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
             let literal = ["C".to_string()];
@@ -104,8 +108,8 @@ mod tests {
         #[test]
         fn two_symbols_encoding_is_correct() {
             let mut gen = HuffmanGenerator::new();
-            gen.add_occurences(&"A", 2);
-            gen.add_occurences(&"B", 2);
+            gen.add_occurences_to_symbol(&"A", 2);
+            gen.add_occurences_to_symbol(&"B", 2);
 
             let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
             let literal = ["B", "A"];
@@ -117,9 +121,9 @@ mod tests {
         #[test]
         fn three_symbols_encoding_is_correct() {
             let mut gen = HuffmanGenerator::new();
-            gen.add_occurences(&"A", 10);
-            gen.add_occurences(&"B", 2);
-            gen.add_occurences(&"C", 2);
+            gen.add_occurences_to_symbol(&"A", 10);
+            gen.add_occurences_to_symbol(&"B", 2);
+            gen.add_occurences_to_symbol(&"C", 2);
 
             let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
             let literal = [
@@ -133,10 +137,10 @@ mod tests {
         #[test]
         fn four_symbols_encoding_is_correct() {
             let mut gen = HuffmanGenerator::new();
-            gen.add_occurences(&"A", 9);
-            gen.add_occurences(&"B", 5);
-            gen.add_occurences(&"C", 2);
-            gen.add_occurences(&"D", 2);
+            gen.add_occurences_to_symbol(&"A", 9);
+            gen.add_occurences_to_symbol(&"B", 5);
+            gen.add_occurences_to_symbol(&"C", 2);
+            gen.add_occurences_to_symbol(&"D", 2);
 
             let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
             let literal = [
