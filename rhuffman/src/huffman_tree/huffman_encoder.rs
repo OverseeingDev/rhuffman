@@ -32,9 +32,7 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
         iterator: &mut dyn Iterator<Item = &T>,
     ) -> Result<HuffmanEncoder<T>, &'static str> {
         let mut huffman_generator = HuffmanGenerator::new();
-        for symbol in iterator {
-            huffman_generator.add_occurences_to_symbol(symbol, 1);
-        }
+        huffman_generator.add_occurences_from_iterator(iterator);
         match huffman_generator.into_huffman_tree() {
             Some(tree) => Ok(HuffmanEncoder::from_tree(&tree)),
             None => Err("One or fewer symbols were provided"),
@@ -87,86 +85,84 @@ impl<T: Eq + Hash + Clone + Ord> HuffmanEncoder<T> {
 
 #[cfg(test)]
 mod tests {
-    mod huffman_encoder {
-        use crate::huffman_tree::huffman_generator::HuffmanGenerator;
+    use crate::huffman_tree::huffman_generator::HuffmanGenerator;
 
-        use super::super::*;
+    use super::*;
 
-        #[test]
-        fn using_unknown_symbol_returns_offending_symbol() {
-            let mut gen = HuffmanGenerator::new();
-            gen.add_occurences_to_symbol(&String::from("A"), 2);
-            gen.add_occurences_to_symbol(&String::from("B"), 2);
+    #[test]
+    fn using_unknown_symbol_returns_offending_symbol() {
+        let mut gen = HuffmanGenerator::new();
+        gen.add_occurences_to_symbol(&String::from("A"), 2);
+        gen.add_occurences_to_symbol(&String::from("B"), 2);
 
-            let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
-            let literal = ["C".to_string()];
-            let mut stream = literal.iter();
-            let result = encoder.encode(&mut stream);
-            assert_eq!(Err(String::from("C")), result);
-        }
+        let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
+        let literal = ["C".to_string()];
+        let mut stream = literal.iter();
+        let result = encoder.encode(&mut stream);
+        assert_eq!(Err(String::from("C")), result);
+    }
 
-        #[test]
-        fn two_symbols_encoding_is_correct() {
-            let mut gen = HuffmanGenerator::new();
-            gen.add_occurences_to_symbol(&"A", 2);
-            gen.add_occurences_to_symbol(&"B", 2);
+    #[test]
+    fn two_symbols_encoding_is_correct() {
+        let mut gen = HuffmanGenerator::new();
+        gen.add_occurences_to_symbol(&"A", 2);
+        gen.add_occurences_to_symbol(&"B", 2);
 
-            let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
-            let literal = ["B", "A"];
-            let mut stream = literal.iter();
-            let result = encoder.encode(&mut stream);
-            assert!(result.unwrap().eq_vec(&[false, true]));
-        }
+        let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
+        let literal = ["B", "A"];
+        let mut stream = literal.iter();
+        let result = encoder.encode(&mut stream);
+        assert!(result.unwrap().eq_vec(&[false, true]));
+    }
 
-        #[test]
-        fn three_symbols_encoding_is_correct() {
-            let mut gen = HuffmanGenerator::new();
-            gen.add_occurences_to_symbol(&"A", 10);
-            gen.add_occurences_to_symbol(&"B", 2);
-            gen.add_occurences_to_symbol(&"C", 2);
+    #[test]
+    fn three_symbols_encoding_is_correct() {
+        let mut gen = HuffmanGenerator::new();
+        gen.add_occurences_to_symbol(&"A", 10);
+        gen.add_occurences_to_symbol(&"B", 2);
+        gen.add_occurences_to_symbol(&"C", 2);
 
-            let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
-            let literal = [
-                "A", "A", "B", "A", "A", "C", "C", "A", "A", "A", "A", "B", "A",
-            ];
-            let mut stream = literal.iter();
-            let result = encoder.encode(&mut stream);
-            assert_eq!(result.unwrap().to_bytes(), vec![0b110010, 0b10000011, 0b0]);
-        }
+        let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
+        let literal = [
+            "A", "A", "B", "A", "A", "C", "C", "A", "A", "A", "A", "B", "A",
+        ];
+        let mut stream = literal.iter();
+        let result = encoder.encode(&mut stream);
+        assert_eq!(result.unwrap().to_bytes(), vec![0b110010, 0b10000011, 0b0]);
+    }
 
-        #[test]
-        fn four_symbols_encoding_is_correct() {
-            let mut gen = HuffmanGenerator::new();
-            gen.add_occurences_to_symbol(&"A", 9);
-            gen.add_occurences_to_symbol(&"B", 5);
-            gen.add_occurences_to_symbol(&"C", 2);
-            gen.add_occurences_to_symbol(&"D", 2);
+    #[test]
+    fn four_symbols_encoding_is_correct() {
+        let mut gen = HuffmanGenerator::new();
+        gen.add_occurences_to_symbol(&"A", 9);
+        gen.add_occurences_to_symbol(&"B", 5);
+        gen.add_occurences_to_symbol(&"C", 2);
+        gen.add_occurences_to_symbol(&"D", 2);
 
-            let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
-            let literal = [
-                "A", "B", "B", "A", "C", "D", "A", "A", "B", "A", "A", "B", "A", "A", "B", "C",
-                "D", "A",
-            ];
-            let mut stream = literal.iter();
-            let result = encoder.encode(&mut stream);
-            assert_eq!(
-                result.unwrap().to_bytes(),
-                vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]
-            );
-        }
+        let encoder = HuffmanEncoder::from_tree(&gen.into_huffman_tree().unwrap());
+        let literal = [
+            "A", "B", "B", "A", "C", "D", "A", "A", "B", "A", "A", "B", "A", "A", "B", "C", "D",
+            "A",
+        ];
+        let mut stream = literal.iter();
+        let result = encoder.encode(&mut stream);
+        assert_eq!(
+            result.unwrap().to_bytes(),
+            vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]
+        );
+    }
 
-        #[test]
-        fn encoder_from_iterator() {
-            let literal = [
-                "A", "B", "B", "A", "C", "D", "A", "A", "B", "A", "A", "B", "A", "A", "B", "C",
-                "D", "A",
-            ];
-            let encoder = HuffmanEncoder::from_symbols_iterator(&mut literal.iter()).unwrap();
-            let result = encoder.encode(&mut literal.iter());
-            assert_eq!(
-                result.unwrap().to_bytes(),
-                vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]
-            );
-        }
+    #[test]
+    fn encoder_from_iterator() {
+        let literal = [
+            "A", "B", "B", "A", "C", "D", "A", "A", "B", "A", "A", "B", "A", "A", "B", "C", "D",
+            "A",
+        ];
+        let encoder = HuffmanEncoder::from_symbols_iterator(&mut literal.iter()).unwrap();
+        let result = encoder.encode(&mut literal.iter());
+        assert_eq!(
+            result.unwrap().to_bytes(),
+            vec![0b01010011, 0b11100010, 0b00100010, 0b11111000]
+        );
     }
 }

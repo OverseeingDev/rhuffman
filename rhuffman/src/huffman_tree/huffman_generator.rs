@@ -3,7 +3,10 @@ use std::{
     hash::Hash,
 };
 
+use super::huffman_decoder::HuffmanDecoder;
 use super::huffman_element::HuffmanNode;
+use super::huffman_encoder::HuffmanEncoder;
+
 use std::cmp::Reverse;
 
 /// The primary purpose of this struct is to
@@ -55,6 +58,21 @@ where
                 self.symbols.insert(symbol.clone(), occurences);
             }
         };
+    }
+
+    pub fn add_occurences_from_iterator(&mut self, iterator: &mut dyn Iterator<Item = &T>) {
+        for symbol in iterator {
+            self.add_occurences_to_symbol(symbol, 1);
+        }
+    }
+
+    pub fn into_encoder_decoder_pair(self) -> Option<(HuffmanEncoder<T>, HuffmanDecoder<T>)> {
+        if let Some(tree) = self.into_huffman_tree() {
+            let encoder = HuffmanEncoder::from_tree(&tree);
+            Some((encoder, HuffmanDecoder::new(tree)))
+        } else {
+            None
+        }
     }
 
     /// Construct a huffman tree from the symbols and occurences added
