@@ -1,0 +1,12 @@
+[package]
+name = "rhuffman"
+version = "0.1.0"
+authors = ["Loic LeBlanc <loicleblancprofessionnel@gmail.com>"]
+edition = "2018"
+license = "MIT"
+description = "Generate Huffman encodings for your symbols!"
+repository = "https://github.com/OverseeingDev/rhuffman.git"
+categories = ["compression"]
+
+[dependencies]
+bit-vec = "0.6"

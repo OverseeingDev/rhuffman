@@ -10,7 +10,7 @@ use super::huffman_generator::HuffmanGenerator;
 /// compression for the particular sequence being compressed.
 /// ## Examples
 /// ```
-/// # use crate::huffman::huffman_tree::huffman_encoder::HuffmanEncoder;
+/// # use crate::rhuffman::huffman_tree::huffman_encoder::HuffmanEncoder;
 /// let literal = [
 /// "B", "A", "A", "A", "A", "C"
 /// ];

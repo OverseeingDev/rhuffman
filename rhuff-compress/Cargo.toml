@@ -1,0 +1,11 @@
+[package]
+name = "rhuff-compress"
+version = "0.1.0"
+authors = ["Loic LeBlanc <loicleblancprofessionnel@gmail.com>"]
+edition = "2018"
+license = "MIT"
+description = "A toy compression tool and algorithm"
+repository = "https://github.com/OverseeingDev/rhuffman.git"
+
+[dependencies]
+rhuffman = { path = "../rhuffman" }

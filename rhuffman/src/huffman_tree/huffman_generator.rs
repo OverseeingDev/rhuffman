@@ -37,7 +37,7 @@ where
     ///
     /// Successive calls to this method are additive e.g.
     /// ```
-    /// # use huffman::huffman_tree::huffman_generator::HuffmanGenerator;
+    /// # use rhuffman::huffman_tree::huffman_generator::HuffmanGenerator;
     /// let mut two_plus_two = HuffmanGenerator::new();
     /// two_plus_two.add_occurences_to_symbol(&"A", 2);
     /// two_plus_two.add_occurences_to_symbol(&"A", 2);
