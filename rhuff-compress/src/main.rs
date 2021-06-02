@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "Data shall be brought to entropy", author)]
+#[structopt(about = "Size shall be brought to entropy", author)]
 struct Opt {
     /// Compress input file into output file
     #[structopt(short = "c", long = "compress", conflicts_with("decompress"))]
