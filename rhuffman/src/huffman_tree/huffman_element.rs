@@ -1,16 +1,18 @@
 use std::{cmp::Ordering, usize};
-use HuffmanNode::*;
+use WeightedHuffmanNode::*;
 
+/// This node is used while building the Huffman tree, it
+/// keeps track of its weight but should not be used for children nodes as weight is useless for children nodes
 #[derive(PartialEq, Eq, Debug)]
-pub enum HuffmanNode<T>
+pub enum WeightedHuffmanNode<T>
 where
     T: PartialEq + Eq,
 {
-    Leaf(HuffmanLeaf<T>),
-    Branch(HuffmanBranch<T>),
+    Leaf(WeightedHuffmanLeaf<T>),
+    Branch(WeightedHuffmanBranch<T>),
 }
 
-impl<T> HuffmanNode<T>
+impl<T> WeightedHuffmanNode<T>
 where
     T: PartialEq + Eq,
 {
@@ -21,16 +23,19 @@ where
         }
     }
 
-    pub fn into_leaf(symbol: T, weight: usize) -> HuffmanNode<T> {
-        Leaf(HuffmanLeaf { symbol, weight })
+    pub fn into_leaf(symbol: T, weight: usize) -> WeightedHuffmanNode<T> {
+        Leaf(WeightedHuffmanLeaf { symbol, weight })
     }
 
-    pub fn into_branch(greater: HuffmanNode<T>, lower: HuffmanNode<T>) -> HuffmanNode<T> {
-        Branch(HuffmanBranch::new(greater, lower))
+    pub fn into_branch(
+        greater: WeightedHuffmanNode<T>,
+        lower: WeightedHuffmanNode<T>,
+    ) -> WeightedHuffmanNode<T> {
+        Branch(WeightedHuffmanBranch::new(greater, lower))
     }
 }
 
-impl<T> PartialOrd for HuffmanNode<T>
+impl<T> PartialOrd for WeightedHuffmanNode<T>
 where
     T: PartialEq + Eq + Ord,
 {
@@ -39,8 +44,8 @@ where
     }
 }
 
-// Need to implement some arbitrary ord so that different branches are not completely equal
-impl<T> Ord for HuffmanNode<T>
+// Need to implement some arbitrary ord so that equally weighted branches are chosen deterministically
+impl<T> Ord for WeightedHuffmanNode<T>
 where
     T: PartialEq + Eq + Ord,
 {
@@ -60,7 +65,7 @@ where
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct HuffmanLeaf<T>
+pub struct WeightedHuffmanLeaf<T>
 where
     T: PartialEq + Eq,
 {
@@ -68,7 +73,7 @@ where
     pub symbol: T,
 }
 #[derive(PartialEq, Eq, Debug)]
-pub struct HuffmanBranch<T>
+pub struct WeightedHuffmanBranch<T>
 where
     T: PartialEq + Eq,
 {
@@ -76,14 +81,81 @@ where
     pub links: (Box<HuffmanNode<T>>, Box<HuffmanNode<T>>),
 }
 
-impl<T> HuffmanBranch<T>
+impl<T> WeightedHuffmanBranch<T>
 where
     T: PartialEq + Eq,
 {
-    pub fn new(greater: HuffmanNode<T>, lower: HuffmanNode<T>) -> HuffmanBranch<T> {
-        HuffmanBranch {
+    pub fn new(
+        greater: WeightedHuffmanNode<T>,
+        lower: WeightedHuffmanNode<T>,
+    ) -> WeightedHuffmanBranch<T> {
+        WeightedHuffmanBranch {
             weight: greater.get_weight() + lower.get_weight(),
-            links: (Box::new(greater), Box::new(lower)),
+            links: (Box::new(greater.into()), Box::new(lower.into())),
         }
     }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum HuffmanNode<T>
+where
+    T: PartialEq + Eq,
+{
+    Leaf(HuffmanLeaf<T>),
+    Branch(HuffmanBranch<T>),
+}
+
+impl<T> From<WeightedHuffmanNode<T>> for HuffmanNode<T>
+where
+    T: PartialEq + Eq,
+{
+    fn from(weighted: WeightedHuffmanNode<T>) -> Self {
+        match weighted {
+            Leaf(leaf) => HuffmanNode::Leaf(HuffmanLeaf {
+                symbol: leaf.symbol,
+            }),
+            Branch(WeightedHuffmanBranch { links, .. }) => {
+                HuffmanNode::Branch(HuffmanBranch { links })
+            }
+        }
+    }
+}
+impl<T> PartialOrd for HuffmanNode<T>
+where
+    T: PartialEq + Eq + Ord,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+// Some arbitrary ord so that equally weighted branches are chosen deterministically
+impl<T> Ord for HuffmanNode<T>
+where
+    T: PartialEq + Eq + Ord,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (HuffmanNode::Leaf(_), HuffmanNode::Branch(_)) => Ordering::Greater,
+            (HuffmanNode::Branch(_), HuffmanNode::Leaf(_)) => Ordering::Less,
+            (HuffmanNode::Leaf(me), HuffmanNode::Leaf(other)) => me.symbol.cmp(&other.symbol),
+            (HuffmanNode::Branch(me), HuffmanNode::Branch(other)) => me.links.0.cmp(&other.links.0),
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct HuffmanLeaf<T>
+where
+    T: PartialEq + Eq,
+{
+    pub symbol: T,
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct HuffmanBranch<T>
+where
+    T: PartialEq + Eq,
+{
+    pub links: (Box<HuffmanNode<T>>, Box<HuffmanNode<T>>),
 }
