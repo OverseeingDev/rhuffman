@@ -32,7 +32,7 @@ impl<T: PartialEq + Eq + Clone> HuffmanDecoder<T> {
                     &branch.links.0
                 };
                 *pos += 1;
-                HuffmanDecoder::decode_single_symbol(buffer, &*next_node, pos)
+                HuffmanDecoder::decode_single_symbol(buffer, next_node, pos)
             }
             HuffmanNode::Leaf(leaf) => leaf.symbol.clone(),
         }
