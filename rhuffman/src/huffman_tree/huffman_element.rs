@@ -1,41 +1,36 @@
-use std::{cmp::Ordering, usize};
-use WeightedHuffmanNode::*;
+use std::cmp::Ordering;
 
+use HuffmanNode::*;
 /// This node is used while building the Huffman tree, it
 /// keeps track of its weight but should not be used for children nodes as weight is useless for children nodes
+
 #[derive(PartialEq, Eq, Debug)]
-pub enum WeightedHuffmanNode<T>
+pub struct Weighted<T: Eq>(HuffmanNode<T>, u64);
+
+impl<T> Weighted<T>
 where
     T: PartialEq + Eq,
 {
-    Leaf(WeightedHuffmanLeaf<T>),
-    Branch(WeightedHuffmanBranch<T>),
-}
-
-impl<T> WeightedHuffmanNode<T>
-where
-    T: PartialEq + Eq,
-{
-    pub fn get_weight(&self) -> usize {
-        match self {
-            Leaf(leaf) => leaf.weight,
-            Branch(branch) => branch.weight,
-        }
+    pub fn get_weight(&self) -> u64 {
+        self.1
     }
 
-    pub fn into_leaf(symbol: T, weight: usize) -> WeightedHuffmanNode<T> {
-        Leaf(WeightedHuffmanLeaf { symbol, weight })
+    pub fn new_leaf(symbol: T, weight: u64) -> Weighted<T> {
+        Weighted(HuffmanNode::Leaf(HuffmanLeaf { symbol }), weight)
     }
 
-    pub fn into_branch(
-        greater: WeightedHuffmanNode<T>,
-        lower: WeightedHuffmanNode<T>,
-    ) -> WeightedHuffmanNode<T> {
-        Branch(WeightedHuffmanBranch::new(greater, lower))
+    pub fn new_branch(greater: Weighted<T>, lower: Weighted<T>) -> Weighted<T> {
+        let sum_of_weights = greater.get_weight() + lower.get_weight();
+        Weighted(
+            HuffmanNode::Branch(HuffmanBranch {
+                links: (Box::new(greater.into()), Box::new(lower.into())),
+            }),
+            sum_of_weights,
+        )
     }
 }
 
-impl<T> PartialOrd for WeightedHuffmanNode<T>
+impl<T> PartialOrd for Weighted<T>
 where
     T: PartialEq + Eq + Ord,
 {
@@ -45,7 +40,7 @@ where
 }
 
 // Need to implement some arbitrary ord so that equally weighted branches are chosen deterministically
-impl<T> Ord for WeightedHuffmanNode<T>
+impl<T> Ord for Weighted<T>
 where
     T: PartialEq + Eq + Ord,
 {
@@ -53,45 +48,15 @@ where
         let ordering = self.get_weight().cmp(&other.get_weight());
         if let Ordering::Equal = ordering {
             match (self, other) {
-                (Leaf(_), Branch(_)) => Ordering::Greater,
-                (Branch(_), Leaf(_)) => Ordering::Less,
-                (Leaf(me), Leaf(other)) => me.symbol.cmp(&other.symbol),
-                (Branch(me), Branch(other)) => me.links.0.cmp(&other.links.0),
+                (Weighted(Leaf(_), ..), Weighted(Branch(_), ..)) => Ordering::Greater,
+                (Weighted(Branch(_), ..), Weighted(Leaf(_), ..)) => Ordering::Less,
+                (Weighted(Leaf(me), ..), Weighted(Leaf(other), ..)) => me.symbol.cmp(&other.symbol),
+                (Weighted(Branch(me), ..), Weighted(Branch(other), ..)) => {
+                    me.links.0.cmp(&other.links.0)
+                }
             }
         } else {
             ordering
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Debug)]
-pub struct WeightedHuffmanLeaf<T>
-where
-    T: PartialEq + Eq,
-{
-    pub weight: usize,
-    pub symbol: T,
-}
-#[derive(PartialEq, Eq, Debug)]
-pub struct WeightedHuffmanBranch<T>
-where
-    T: PartialEq + Eq,
-{
-    pub weight: usize,
-    pub links: (Box<HuffmanNode<T>>, Box<HuffmanNode<T>>),
-}
-
-impl<T> WeightedHuffmanBranch<T>
-where
-    T: PartialEq + Eq,
-{
-    pub fn new(
-        greater: WeightedHuffmanNode<T>,
-        lower: WeightedHuffmanNode<T>,
-    ) -> WeightedHuffmanBranch<T> {
-        WeightedHuffmanBranch {
-            weight: greater.get_weight() + lower.get_weight(),
-            links: (Box::new(greater.into()), Box::new(lower.into())),
         }
     }
 }
@@ -105,21 +70,24 @@ where
     Branch(HuffmanBranch<T>),
 }
 
-impl<T> From<WeightedHuffmanNode<T>> for HuffmanNode<T>
+impl<T: PartialEq + Eq> HuffmanNode<T> {}
+
+impl<T> From<Weighted<T>> for HuffmanNode<T>
 where
     T: PartialEq + Eq,
 {
-    fn from(weighted: WeightedHuffmanNode<T>) -> Self {
+    fn from(weighted: Weighted<T>) -> Self {
         match weighted {
-            Leaf(leaf) => HuffmanNode::Leaf(HuffmanLeaf {
+            Weighted(Leaf(leaf), ..) => HuffmanNode::Leaf(HuffmanLeaf {
                 symbol: leaf.symbol,
             }),
-            Branch(WeightedHuffmanBranch { links, .. }) => {
+            Weighted(Branch(HuffmanBranch { links }), ..) => {
                 HuffmanNode::Branch(HuffmanBranch { links })
             }
         }
     }
 }
+
 impl<T> PartialOrd for HuffmanNode<T>
 where
     T: PartialEq + Eq + Ord,

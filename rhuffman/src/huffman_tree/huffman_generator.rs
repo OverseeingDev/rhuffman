@@ -3,7 +3,7 @@ use std::{
     hash::Hash,
 };
 
-use super::huffman_element::WeightedHuffmanNode;
+use super::huffman_element::Weighted;
 use super::huffman_encoder::HuffmanEncoder;
 use super::{huffman_decoder::HuffmanDecoder, huffman_element::HuffmanNode};
 
@@ -86,14 +86,14 @@ where
 
         let mut symbols = BinaryHeap::new();
         for (symbol, count) in self.symbols.into_iter() {
-            symbols.push(Reverse(WeightedHuffmanNode::into_leaf(symbol, count)));
+            symbols.push(Reverse(Weighted::new_leaf(symbol, count as u64)));
         }
 
         while symbols.len() > 1 {
             let lower = symbols.pop().unwrap().0;
             let greater = symbols.pop().unwrap().0;
 
-            symbols.push(Reverse(WeightedHuffmanNode::into_branch(greater, lower)));
+            symbols.push(Reverse(Weighted::new_branch(greater, lower)));
         }
 
         Some(symbols.pop().unwrap().0.into())
@@ -137,7 +137,7 @@ mod tests {
 
         let tree = generator.into_huffman_tree().unwrap();
 
-        assert_eq!(tree, WeightedHuffmanNode::into_leaf("A", 2).into());
+        assert_eq!(tree, Weighted::new_leaf("A", 2).into());
     }
 
     #[ignore = "Broken since no more weights"]
