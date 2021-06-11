@@ -1,4 +1,4 @@
-use super::huffman_element::HuffmanNode;
+use super::huffman_node::HuffmanNode;
 
 use bit_vec::BitVec;
 

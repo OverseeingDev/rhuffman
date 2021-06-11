@@ -2,8 +2,8 @@ use std::{collections::HashMap, hash::Hash};
 
 use bit_vec::BitVec;
 
-use super::huffman_element::HuffmanNode;
 use super::huffman_generator::HuffmanGenerator;
+use super::huffman_node::HuffmanNode;
 
 /// The huffman encoder struct contains a Huffman encoding scheme that can then be used to encode various sequences
 /// of the symbols. Usually, that huffman encoding scheme is generated on a per-sample basis so as to optimize the

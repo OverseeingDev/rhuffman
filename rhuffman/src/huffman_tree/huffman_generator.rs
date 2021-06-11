@@ -3,9 +3,9 @@ use std::{
     hash::Hash,
 };
 
-use super::huffman_element::Weighted;
 use super::huffman_encoder::HuffmanEncoder;
-use super::{huffman_decoder::HuffmanDecoder, huffman_element::HuffmanNode};
+use super::huffman_node::Weighted;
+use super::{huffman_decoder::HuffmanDecoder, huffman_node::HuffmanNode};
 
 use std::cmp::Reverse;
 
