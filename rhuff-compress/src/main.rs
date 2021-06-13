@@ -1,5 +1,7 @@
 mod compressed;
 
+use bit_vec::BitVec;
+use rhuffman::huffman_tree::huffman_decoder::HuffmanDecoder;
 use rhuffman::huffman_tree::huffman_generator::HuffmanGenerator;
 use std::io::prelude::*;
 use std::{fs::File, path::PathBuf};
@@ -53,7 +55,18 @@ fn main() {
         let compressed = rmp_serde::to_vec(&data).unwrap();
         out.write_all(&compressed).unwrap();
     } else if opt.decompress {
+        // Basic byte-wise Huffman compression
+
+        let data: Compressed<u8> = rmp_serde::from_slice(contents.as_slice()).unwrap();
+        let mut bitvec = BitVec::from_bytes(data.data.as_slice());
+
+        // Restore bit length from bytes
+        unsafe {
+            bitvec.set_len(data.data_len);
+        }
+        let decoder = HuffmanDecoder::new(data.tree);
+        out.write_all(&decoder.decode_unbounded(&bitvec)).unwrap();
     } else {
-        panic!("Neither compress or decompress was set")
+        panic!("Neither compress or decompress was set. This is a bug in rhuff-compress")
     }
 }
