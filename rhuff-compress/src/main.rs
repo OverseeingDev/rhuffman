@@ -1,14 +1,20 @@
-use std::path::PathBuf;
+mod compressed;
+
+use rhuffman::huffman_tree::huffman_generator::HuffmanGenerator;
+use std::io::prelude::*;
+use std::{fs::File, path::PathBuf};
 use structopt::StructOpt;
+
+use compressed::Compressed;
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = "Size shall be brought to entropy", author)]
 struct Opt {
     /// Compress input file into output file
-    #[structopt(short = "c", long = "compress", conflicts_with("decompress"))]
+    #[structopt(short = "c", long = "compress", required_unless = "decompress")]
     compress: bool,
     /// Decompress input file into output file
-    #[structopt(short = "d", long = "decompress", conflicts_with("compress"))]
+    #[structopt(short = "d", long = "decompress", required_unless = "compress")]
     decompress: bool,
 
     /// Input file
@@ -22,5 +28,32 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    println!("{:?}", opt);
+    //println!("{:?}", opt);
+
+    let mut file = File::open(opt.input).expect("Unable to open the file");
+    let mut contents = Vec::new();
+    file.read_to_end(&mut contents)
+        .expect("Unable to read the file");
+
+    let mut out = File::create(opt.output).expect("could not create output file");
+
+    if opt.compress {
+        // Basic byte-wise Huffman compression
+        let mut gen = HuffmanGenerator::new();
+        gen.add_occurences_from_iterator(&mut contents.iter());
+        let (encoder, _decoder) = gen.into_encoder_decoder_pair().unwrap();
+        let compressed = encoder.encode(&mut contents.iter()).unwrap();
+
+        let data = Compressed {
+            tree: _decoder.get_tree().clone(),
+            data: compressed.to_bytes(),
+            data_len: compressed.len(),
+        };
+
+        let compressed = rmp_serde::to_vec(&data).unwrap();
+        out.write_all(&compressed).unwrap();
+    } else if opt.decompress {
+    } else {
+        panic!("Neither compress or decompress was set")
+    }
 }

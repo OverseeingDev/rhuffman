@@ -37,6 +37,10 @@ impl<T: PartialEq + Eq + Clone> HuffmanDecoder<T> {
             HuffmanNode::Leaf(leaf) => leaf.symbol.clone(),
         }
     }
+
+    pub fn get_tree(&self) -> &HuffmanNode<T> {
+        &self.root
+    }
 }
 
 #[cfg(test)]

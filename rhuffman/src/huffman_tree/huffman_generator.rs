@@ -9,6 +9,8 @@ use super::{huffman_decoder::HuffmanDecoder, huffman_node::HuffmanNode};
 
 use std::cmp::Reverse;
 
+pub type HuffmanTree<T> = HuffmanNode<T>;
+
 /// The primary purpose of this struct is to
 /// help generate the frequency analysis necessary
 /// for Huffman encoding to be effective. Although this
